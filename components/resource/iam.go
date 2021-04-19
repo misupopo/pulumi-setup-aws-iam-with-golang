@@ -6,10 +6,6 @@ import (
 	"github.com/pulumi/pulumi/sdk/v2/go/pulumi"
 )
 
-//type LoadBalancer struct {
-//	LoadBalancerType string `json:"loadBalancerType"`
-//}
-
 type Iam struct {
 }
 
@@ -17,29 +13,42 @@ func (d *Deployment) createNewNewUser(
 	ctx *pulumi.Context,
 	region *Region,
 ) (*iam.User, error) {
-	newUser, err := iam.NewUser(ctx, "lbUser", &iam.UserArgs{
-		Path: pulumi.String("/system/"),
-		Tags: pulumi.StringMap{
-			"tag-key": pulumi.String("tag-value"),
-		},
-	})
+	newUser, err := iam.NewUser(ctx,
+		fmt.Sprintf("%s%s", region.ResourceName, "-new-user"),
+		&iam.UserArgs{
+			Path: pulumi.String("/system/"),
+			Tags: pulumi.StringMap{
+				"tag-key": pulumi.String("tag-value"),
+			},
+		})
 
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = iam.NewAccessKey(ctx, "lbAccessKey", &iam.AccessKeyArgs{
-		User: newUser.Name,
-	})
+	// アクセスキーは管理者がGUI上で作成し、Slackなどでお伝えするのが理想なのでコメントアウト
+	//newAccessKey, err := iam.NewAccessKey(ctx,
+	//	fmt.Sprintf("%s%s", region.ResourceName, "-new-accesskey"),
+	//	&iam.AccessKeyArgs{
+	//		User: newUser.Name,
+	//	})
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//// pulumi-log-upで実行したときにout.txtの中に吐き出される
+	//ctx.Export("user secret", pulumi.Sprintf("%s", newAccessKey.Secret.ToStringOutput()))
 
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = iam.NewUserPolicy(ctx, "lbRo", &iam.UserPolicyArgs{
-		User:   newUser.Name,
-		Policy: pulumi.String(fmt.Sprintf("%v%v%v%v%v%v%v%v%v%v%v%v", "{\n", "  \"Version\": \"2012-10-17\",\n", "  \"Statement\": [\n", "    {\n", "      \"Action\": [\n", "        \"ec2:Describe*\"\n", "      ],\n", "      \"Effect\": \"Allow\",\n", "      \"Resource\": \"*\"\n", "    }\n", "  ]\n", "}\n")),
-	})
+	// 予め作成しておいたGroupにユーザーを紐づける
+	_, err = iam.NewUserGroupMembership(ctx,
+		fmt.Sprintf("%s%s", region.ResourceName, "-new-group"),
+		&iam.UserGroupMembershipArgs{
+			User: newUser.Name,
+			Groups: pulumi.StringArray{
+				pulumi.String("development"),
+			},
+		})
 
 	if err != nil {
 		return nil, err
@@ -47,5 +56,4 @@ func (d *Deployment) createNewNewUser(
 
 	return newUser, nil
 }
-
 

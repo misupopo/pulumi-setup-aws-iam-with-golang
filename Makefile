@@ -20,3 +20,12 @@ pulumi-preview:
 
 # アタッチされているポリシーなどを確認する方法
 # https://qiita.com/isobecky74/items/92d35fa1d3063fe64dc4
+
+# debug logを吐き出す
+# secretはout.txtに吐き出される
+pulumi-log-up:
+	pulumi up --logtostderr -v=9 2> export/log.txt
+
+# log.txtに書き出されたsecretキーを確認する
+show-secret:
+	cat export/log.txt | grep "user secret"
