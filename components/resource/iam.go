@@ -19,7 +19,7 @@ func (d *Deployment) createNewNewUser(
 		&iam.UserArgs{
 			Path: pulumi.String("/system/"),
 			Tags: pulumi.StringMap{
-				"tag-key": pulumi.String(user.MailAddress),
+				"mail": pulumi.String(user.MailAddress),
 			},
 		})
 
