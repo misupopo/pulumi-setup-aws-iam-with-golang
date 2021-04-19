@@ -1,0 +1,7 @@
+{
+  "ResourceName": "superTest",
+  "keyPairName": "superTestKeyPair01",
+  "iam": {
+    "name": "rintarou_okabe"
+  }
+}
