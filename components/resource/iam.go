@@ -12,13 +12,14 @@ type Iam struct {
 func (d *Deployment) createNewNewUser(
 	ctx *pulumi.Context,
 	region *Region,
+	user User,
 ) (*iam.User, error) {
 	newUser, err := iam.NewUser(ctx,
-		fmt.Sprintf("%s%s", region.ResourceName, "-new-user"),
+		fmt.Sprintf("%s", user.UserName),
 		&iam.UserArgs{
 			Path: pulumi.String("/system/"),
 			Tags: pulumi.StringMap{
-				"tag-key": pulumi.String("tag-value"),
+				"tag-key": pulumi.String(user.MailAddress),
 			},
 		})
 
@@ -28,7 +29,7 @@ func (d *Deployment) createNewNewUser(
 
 	// アクセスキーは管理者がGUI上で作成し、Slackなどでお伝えするのが理想なのでコメントアウト
 	//newAccessKey, err := iam.NewAccessKey(ctx,
-	//	fmt.Sprintf("%s%s", region.ResourceName, "-new-accesskey"),
+	//	fmt.Sprintf("%s%s", region.ResourceName, "-new-accessKey"),
 	//	&iam.AccessKeyArgs{
 	//		User: newUser.Name,
 	//	})

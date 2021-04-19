@@ -6,6 +6,33 @@ import (
 	"io/ioutil"
 )
 
+type UserList []User
+
+type User struct {
+	UserName    string `json:"userName"`
+	MailAddress string `json:"mailAddress"`
+}
+
+func readUserJson(ctx *pulumi.Context) (UserList, error) {
+	user, err := ioutil.ReadFile("./user.json")
+
+	if err != nil {
+		ctx.Export("Unmarshal error", pulumi.Printf("%v", err))
+		return nil, err
+	}
+
+	var u UserList
+
+	err = json.Unmarshal(user, &u)
+
+	if err != nil {
+		ctx.Export("Unmarshal error in readUserJson", pulumi.Printf("%v", err))
+		return nil, err
+	}
+
+	return u, err
+}
+
 func Setup(ctx *pulumi.Context) error {
 	config, _ := ioutil.ReadFile("./config.json")
 
@@ -22,14 +49,22 @@ func Setup(ctx *pulumi.Context) error {
 
 	deployment := new(Deployment)
 
-	_, err = deployment.createNewNewUser(ctx, region)
+	userList, err := readUserJson(ctx)
 
 	if err != nil {
-		ctx.Export("createNewNewUser error", pulumi.Printf("%v", err))
+		ctx.Export("readUserJson error", pulumi.Printf("%v", err))
 		return err
 	}
 
+	for _, user := range userList {
+		_, err = deployment.createNewNewUser(ctx, region, user)
 
+		if err != nil {
+			ctx.Export("createNewNewUser error", pulumi.Printf("%v", err))
+			ctx.Export("user name: ", pulumi.Printf("%v", user.UserName))
+			return err
+		}
+	}
 
 	return nil
 }
